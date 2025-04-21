@@ -1,0 +1,30 @@
+.home {
+  width: 100%;
+  max-width: 800px;
+
+  padding: 1rem;
+  margin: 0 auto;
+
+  gap: 0.75rem;
+
+  .linkButton {
+    color: #fff;
+    font-size: min(8vw, 4rem);
+
+    &.text {
+      background-color: #8ace00;
+      color: #000;
+      span {
+        filter: blur(1px);
+      }
+    }
+
+    &.editor {
+      background-color: #8900ce;
+    }
+
+    &.presets {
+      background-color: #ce3c4d;
+    }
+  }
+}

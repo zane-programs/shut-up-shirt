@@ -1,0 +1,16 @@
+.editor {
+  width: 100vw;
+  height: 100vh;
+
+  position: relative;
+
+  .fabricCanvas {
+    /* width: 100vw; */
+    background-color: #fff;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+}

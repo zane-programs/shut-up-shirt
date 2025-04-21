@@ -1,0 +1,31 @@
+.box,
+.flex {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.flex {
+  display: flex;
+  flex-direction: row;
+}
+
+.button {
+  text-transform: lowercase;
+  font-weight: 400;
+
+  font-size: 1.2rem;
+
+  border-radius: 0.4em;
+  border: none;
+
+  padding: 0.35em 0.7em;
+
+  cursor: pointer;
+
+  text-decoration: none;
+  text-align: center;
+
+  color: #fff;
+  background: #666;
+}
