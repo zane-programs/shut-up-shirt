@@ -18,7 +18,7 @@ def show(image_path, light=False):
     img.thumbnail(dims)
 
     # Align image with bottom of display
-    paste_coords = [dims[i] - img.size[i] for i in range(0, 1)]
+    paste_coords = [dims[i] - img.size[i] for i in (0, 1)]
 
     display.frame_buf.paste(img, paste_coords)
     display.draw_full(constants.DisplayModes.GC16)
