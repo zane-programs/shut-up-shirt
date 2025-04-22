@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Modal } from "../../core/core";
 import { type ITextModalConfig, TextModalContext } from "./text-modal";
 
@@ -11,6 +11,38 @@ export default function TextModalProvider({
 }) {
   const [modalConfig, setModalConfig] = useState<ITextModalConfig | null>(null);
   const [value, setValue] = useState<string>("");
+
+  useEffect(() => {
+    setValue(modalConfig?.defaultValue || "");
+  }, [modalConfig]);
+
+  return (
+    <TextModalContext.Provider value={{ prompt: setModalConfig }}>
+      {children}
+      {modalConfig && (
+        <ModalComponent
+          modalConfig={modalConfig}
+          setModalConfig={setModalConfig}
+          value={value}
+          setValue={setValue}
+        />
+      )}
+    </TextModalContext.Provider>
+  );
+}
+
+function ModalComponent({
+  modalConfig,
+  setModalConfig,
+  value,
+  setValue,
+}: {
+  modalConfig: ITextModalConfig;
+  setModalConfig: React.Dispatch<React.SetStateAction<ITextModalConfig | null>>;
+  value: string;
+  setValue: React.Dispatch<React.SetStateAction<string>>;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleClose = () => {
     setModalConfig(null);
@@ -36,32 +68,28 @@ export default function TextModalProvider({
   );
 
   useEffect(() => {
-    setValue(modalConfig?.defaultValue || "");
-  }, [modalConfig]);
+    inputRef.current?.focus();
+  }, []);
 
   return (
-    <TextModalContext.Provider value={{ prompt: setModalConfig }}>
-      {children}
-      {modalConfig && (
-        <Modal
-          isOpen={!!modalConfig}
-          onClose={handleClose}
-          title={modalConfig.title}
-        >
-          <input
-            type="text"
-            placeholder={modalConfig.placeholder}
-            defaultValue={modalConfig.defaultValue}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className={styles.textInput}
-          />
-          <Button onClick={handleSubmit}>
-            {modalConfig.submitButtonText || "Submit"}
-          </Button>
-        </Modal>
-      )}
-    </TextModalContext.Provider>
+    <Modal
+      isOpen={!!modalConfig}
+      onClose={handleClose}
+      title={modalConfig.title}
+    >
+      <input
+        type="text"
+        placeholder={modalConfig.placeholder}
+        defaultValue={modalConfig.defaultValue}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        className={styles.textInput}
+        ref={inputRef}
+      />
+      <Button onClick={handleSubmit}>
+        {modalConfig.submitButtonText || "Submit"}
+      </Button>
+    </Modal>
   );
 }

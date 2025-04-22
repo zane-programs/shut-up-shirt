@@ -28,10 +28,10 @@ function createPythonProcess() {
   process.on("close", (code) => {
     console.log(`Python process exited with code ${code}`);
     // Restart the process if it closes unexpectedly
-    if (code !== 0) {
-      console.log("Restarting Python process...");
-      pythonProcess = createPythonProcess();
-    }
+    // if (code !== 0) {
+    //   console.log("Restarting Python process...");
+    //   pythonProcess = createPythonProcess();
+    // }
   });
 
   return process;

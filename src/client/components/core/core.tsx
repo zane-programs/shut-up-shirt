@@ -1,5 +1,4 @@
 import classNames from "classnames";
-import React from "react";
 import styles from "./index.module.scss";
 
 // Define Polymorphic Type
@@ -103,6 +102,7 @@ export function Modal<C extends React.ElementType = "div">({
   ...props
 }: ModalProps<C>) {
   const Component = as || "div";
+
   return (
     <Component
       className={classNames(className, styles.modal)}
