@@ -1,16 +1,18 @@
 import express from "express";
 import ViteExpress from "vite-express";
 import multer from "multer";
-import { spawn } from "child_process";
+import { spawn, type ChildProcessWithoutNullStreams } from "child_process";
 import { unlink } from "node:fs/promises";
 
 const upload = multer({ dest: "temp_uploads/" });
 const app = express();
 
 // Function to spawn and manage the Python process
-function createPythonProcess() {
-  const process = spawn("python", ["show.py"], {
-    stdio: ["pipe", "pipe", "pipe"], // stdin, stdout, stderr
+function createPythonProcess(filename: string) {
+  // if (pipeAll)
+  const process = spawn("python", [filename], {
+    stdio: ["pipe", "pipe", "pipe"],
+    shell: true,
   });
 
   process.stdout.on("data", (data) => {
@@ -28,17 +30,18 @@ function createPythonProcess() {
   process.on("close", (code) => {
     console.log(`Python process exited with code ${code}`);
     // Restart the process if it closes unexpectedly
-    // if (code !== 0) {
-    //   console.log("Restarting Python process...");
-    //   pythonProcess = createPythonProcess();
-    // }
+    if (code !== 0) {
+      console.log("Restarting Python process...");
+      pythonProcess = createPythonProcess(filename);
+    }
   });
 
   return process;
 }
 
 // Initialize the Python process once when the server starts
-let pythonProcess = createPythonProcess();
+let pythonProcess = createPythonProcess("display/stdin.py");
+let serverPythonProcess = createPythonProcess("display/server.py");
 
 // Define a delay before deleting the file (in milliseconds)
 const FILE_PROCESSING_DELAY = 5000; // 5 seconds, adjust as needed
@@ -56,7 +59,7 @@ app.post("/show", upload.single("pngFile"), async (req, res) => {
     // Check if process is still running
     if (pythonProcess.killed) {
       console.log("Python process was killed, restarting...");
-      pythonProcess = createPythonProcess();
+      pythonProcess = createPythonProcess("display/stdin.py");
     }
 
     // Send command to the Python process via stdin
@@ -64,7 +67,7 @@ app.post("/show", upload.single("pngFile"), async (req, res) => {
     pythonProcess.stdin.write(`${command}\n`, (err) => {
       if (err) {
         console.error("Error writing to Python process:", err);
-        pythonProcess = createPythonProcess();
+        pythonProcess = createPythonProcess("display/stdin.py");
         res.status(500).send({ message: "Error processing image" });
         return;
       }
