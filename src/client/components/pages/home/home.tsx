@@ -17,7 +17,7 @@ export default function Home() {
       submitButtonText: "Submit",
       onConfirm: async (text) => {
         if (text) {
-          const fd = await renderText(text, "light");
+          const fd = await renderText(text, "dark");
           const response = await fetch("/show", {
             method: "POST",
             body: fd,
