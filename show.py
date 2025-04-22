@@ -7,9 +7,9 @@ from PIL import Image
 display = AutoEPDDisplay(vcom=-1.50, rotate=None, mirror=True, spi_hz=24000000)
 
 
-def show(image_path, light=False):
-    # Clear the display to white if light is True, otherwise clear to black
-    color = 0xFF if light else 0x00
+def show(image_path, dark=False):
+    # Clear the display to white or black, depending on the mode
+    color = 0x00 if dark else 0xFF
     display.frame_buf.paste(color, box=(0, 0, display.width, display.height))
 
     # Load the image
@@ -26,5 +26,5 @@ def show(image_path, light=False):
 
 if __name__ == "__main__":
     img_path = sys.argv[1]
-    light = sys.argv[2] == "light" if len(sys.argv) > 2 else False
-    show(img_path, light)
+    dark = sys.argv[2] == "dark" if len(sys.argv) > 2 else False
+    show(img_path, dark)
