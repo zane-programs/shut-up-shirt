@@ -1,14 +1,47 @@
 import express from "express";
 import ViteExpress from "vite-express";
 import multer from "multer";
-import util from "node:util";
-import { exec as _exec } from "child_process";
-
-const exec = util.promisify(_exec);
+import { spawn } from "child_process";
+import { unlink } from "node:fs/promises";
 
 const upload = multer({ dest: "temp_uploads/" });
-
 const app = express();
+
+// Function to spawn and manage the Python process
+function createPythonProcess() {
+  const process = spawn("python", ["show.py"], {
+    stdio: ["pipe", "pipe", "pipe"], // stdin, stdout, stderr
+  });
+
+  process.stdout.on("data", (data) => {
+    console.log(`Python stdout: ${data}`);
+  });
+
+  process.stderr.on("data", (data) => {
+    console.error(`Python stderr: ${data}`);
+  });
+
+  process.on("error", (err) => {
+    console.error("Failed to start Python process:", err);
+  });
+
+  process.on("close", (code) => {
+    console.log(`Python process exited with code ${code}`);
+    // Restart the process if it closes unexpectedly
+    if (code !== 0) {
+      console.log("Restarting Python process...");
+      pythonProcess = createPythonProcess();
+    }
+  });
+
+  return process;
+}
+
+// Initialize the Python process once when the server starts
+let pythonProcess = createPythonProcess();
+
+// Define a delay before deleting the file (in milliseconds)
+const FILE_PROCESSING_DELAY = 5000; // 5 seconds, adjust as needed
 
 app.post("/show", upload.single("pngFile"), async (req, res) => {
   if (!req.file) {
@@ -19,11 +52,56 @@ app.post("/show", upload.single("pngFile"), async (req, res) => {
   const filePath = req.file.path;
   console.log("File uploaded:", filePath);
 
-  // Execute the Python script with the file path
-  await exec(`python show.py ${filePath}${req.query.dark ? " dark" : ""}`);
-  console.log("Python script executed");
+  try {
+    // Check if process is still running
+    if (pythonProcess.killed) {
+      console.log("Python process was killed, restarting...");
+      pythonProcess = createPythonProcess();
+    }
 
-  res.status(204).send();
+    // Send command to the Python process via stdin
+    const command = req.query.dark ? `${filePath} dark` : filePath;
+    pythonProcess.stdin.write(`${command}\n`, (err) => {
+      if (err) {
+        console.error("Error writing to Python process:", err);
+        pythonProcess = createPythonProcess();
+        res.status(500).send({ message: "Error processing image" });
+        return;
+      }
+
+      // Respond to client
+      res.status(204).send();
+
+      // Delete the file after a delay to give Python time to process it
+      setTimeout(async () => {
+        try {
+          await unlink(filePath);
+          console.log("Temporary file deleted after delay");
+        } catch (err) {
+          console.error("Error deleting temporary file:", err);
+        }
+      }, FILE_PROCESSING_DELAY);
+    });
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    res.status(500).send({ message: "Server error" });
+
+    // Clean up the uploaded file
+    try {
+      await unlink(filePath);
+    } catch (unlink_err) {
+      console.error("Error deleting temporary file:", unlink_err);
+    }
+  }
+});
+
+// Handle graceful shutdown
+process.on("SIGINT", () => {
+  console.log("Gracefully shutting down...");
+  if (pythonProcess && !pythonProcess.killed) {
+    pythonProcess.kill();
+  }
+  process.exit(0);
 });
 
 ViteExpress.listen(app, 3000, () =>
