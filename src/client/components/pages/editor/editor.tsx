@@ -2,7 +2,7 @@ import { FabricJSCanvas, useFabricJSEditor } from "fabricjs-react";
 import { useCallback, useEffect, useRef } from "react";
 
 import styles from "./editor.module.scss";
-import { Box, Button } from "../../shared/core";
+import { Box, Button } from "../../core/core";
 import { handleDeleteSelected, handleSelectAll } from "./util";
 
 // E-ink screen dimensions

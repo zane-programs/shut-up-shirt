@@ -83,3 +83,41 @@ export function Flex<C extends React.ElementType = "div">({
     />
   );
 }
+
+export type ModalProps<C extends React.ElementType = "div"> =
+  PolymorphicComponentProps<
+    C,
+    {
+      isOpen: boolean;
+      onClose?: () => void;
+      title?: string;
+    }
+  >;
+export function Modal<C extends React.ElementType = "div">({
+  as,
+  isOpen,
+  onClose,
+  title,
+  className,
+  children,
+  ...props
+}: ModalProps<C>) {
+  const Component = as || "div";
+  return (
+    <Component
+      className={classNames(className, styles.modal)}
+      style={{
+        display: isOpen ? undefined : "none",
+      }}
+      {...props}
+    >
+      <div className={styles.modalContent}>
+        <div className={styles.closeButton} role="button" onClick={onClose}>
+          &times;
+        </div>
+        {title && <h2 className={styles.modalTitle}>{title}</h2>}
+        <div className={styles.modalBody}>{children}</div>
+      </div>
+    </Component>
+  );
+}

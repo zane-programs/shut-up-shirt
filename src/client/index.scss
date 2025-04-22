@@ -4,5 +4,9 @@ body {
   color: #fff;
   overflow: hidden;
 
-  font-family: "Arial Narrow", sans-serif;
+  font-family: "ArialNarrowRegular", "Arial Narrow", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
 }
