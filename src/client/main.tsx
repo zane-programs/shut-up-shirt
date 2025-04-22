@@ -5,7 +5,7 @@ import { BrowserRouter } from "react-router";
 
 import "normalize.css";
 
-import App from "./app";
+import App from "./App";
 import "./index.scss";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(

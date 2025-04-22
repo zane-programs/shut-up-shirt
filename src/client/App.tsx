@@ -1,9 +1,9 @@
 import { Routes, Route } from "react-router";
 
 // Pages
-import Home from "./components/pages/home/home";
-import Editor from "./components/pages/editor/editor";
-import { TextModalProvider } from "./components/shared/text-modal/text-modal";
+import Home from "./components/pages/home/home.js";
+import Editor from "./components/pages/editor/editor.js";
+import { TextModalProvider } from "./components/shared/text-modal/text-modal.js";
 
 export default function App() {
   return (
