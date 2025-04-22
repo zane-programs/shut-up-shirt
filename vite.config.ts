@@ -11,4 +11,7 @@ export default defineConfig({
       "@server": resolve(__dirname, "./src/server"),
     },
   },
+  server: {
+    allowedHosts: ["all"],
+  },
 });
