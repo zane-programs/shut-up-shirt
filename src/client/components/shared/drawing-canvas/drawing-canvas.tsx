@@ -23,6 +23,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [lineWidth, setLineWidth] = useState(36); // Default line width
   const lastPointRef = useRef<Point | null>(null);
   const pointsRef = useRef<Point[]>([]);
   const throttleTimeoutRef = useRef<number | null>(null);
@@ -33,8 +34,12 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const originalHeight = 1404;
 
   // Throttle rate for canvas updates in milliseconds
-  // const THROTTLE_RATE = 50; // 20 updates per second should be good for e-ink displays
   const THROTTLE_RATE = 200;
+
+  // Handle line width change
+  const handleLineWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLineWidth(Number(e.target.value));
+  };
 
   // Setup canvas and event listeners
   useEffect(() => {
@@ -61,6 +66,20 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     };
   }, []);
 
+  // Apply line width changes to the canvas context
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = colorMode === "dark" ? "#FFFFFF" : "#000000";
+  }, [lineWidth, colorMode]);
+
   useEffect(() => {
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext("2d");
@@ -78,7 +97,8 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
     // Get container dimensions
     const containerWidth = container.clientWidth;
-    const containerHeight = container.clientHeight;
+    // Account for the slider, button tray, and padding
+    const containerHeight = container.clientHeight - 120; // increased from 80 to 120 to account for slider
 
     // Calculate scale to fit container while maintaining aspect ratio
     const scaleX = containerWidth / originalWidth;
@@ -100,10 +120,41 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     // Set drawing styles
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      ctx.lineWidth = 8;
+      ctx.lineWidth = lineWidth;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
+      ctx.strokeStyle = colorMode === "dark" ? "#FFFFFF" : "#000000"; // Set stroke color based on theme
+
+      // Refill the background when resizing
+      ctx.fillStyle = colorMode === "dark" ? "#000000" : "#FFFFFF";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
+  };
+
+  const clear = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = colorMode === "dark" ? "#000000" : "#FFFFFF"; // Set background color based on theme
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    pointsRef.current = []; // Clear the points array
+    lastPointRef.current = null;
+
+    setIsDrawing(false);
+
+    // Run onClear callback if provided
+    if (onClear) {
+      onClear();
+    }
+  };
+
+  const toggleColorMode = () => {
+    setColorMode((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
   // Convert event coordinates to canvas coordinates
@@ -211,7 +262,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     lastPointRef.current = point;
     pointsRef.current = [point]; // Reset the points array
 
-    // Draw a dot at the starting point
+    // Draw a more visible dot at the starting point
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -219,7 +270,8 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     if (!ctx) return;
 
     ctx.beginPath();
-    ctx.arc(point.x, point.y, 1, 0, Math.PI * 2);
+    ctx.fillStyle = colorMode === "dark" ? "#FFFFFF" : "#000000"; // Set fill color based on theme
+    ctx.arc(point.x, point.y, ctx.lineWidth / 2, 0, Math.PI * 2);
     ctx.fill();
 
     // Initial update for onChange callback
@@ -307,34 +359,23 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     updateCanvasBlob();
   };
 
-  const clear = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = colorMode === "dark" ? "#000000" : "#FFFFFF"; // Set background color based on theme
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    pointsRef.current = []; // Clear the points array
-    lastPointRef.current = null;
-
-    setIsDrawing(false);
-
-    // Run onClear callback if provided
-    if (onClear) {
-      onClear();
-    }
-  };
-
-  const toggleColorMode = () => {
-    setColorMode((prev) => (prev === "dark" ? "light" : "dark"));
-  };
-
   return (
     <div className={styles.drawingCanvasContainer} ref={containerRef}>
+      <div className={styles.controlsTop}>
+        <div className={styles.sliderContainer}>
+          <label htmlFor="lineWidth">Line Width: {lineWidth}px</label>
+          <input
+            type="range"
+            id="lineWidth"
+            name="lineWidth"
+            min="8"
+            max="64"
+            value={lineWidth}
+            onChange={handleLineWidthChange}
+            className={styles.slider}
+          />
+        </div>
+      </div>
       <canvas
         ref={canvasRef}
         className={styles.drawingCanvas}

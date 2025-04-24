@@ -103,12 +103,19 @@ export function Modal<C extends React.ElementType = "div">({
 }: ModalProps<C>) {
   const Component = as || "div";
 
+  const handleClickOutside = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget && onClose) {
+      onClose();
+    }
+  };
+
   return (
     <Component
       className={classNames(className, styles.modal)}
       style={{
         display: isOpen ? undefined : "none",
       }}
+      onClick={handleClickOutside}
       {...props}
     >
       <div className={styles.modalContent}>

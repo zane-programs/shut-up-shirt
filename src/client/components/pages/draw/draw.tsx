@@ -2,20 +2,19 @@ import { useEffect, useState } from "react";
 import DrawingCanvas from "../../shared/drawing-canvas/drawing-canvas";
 
 import useWebSocket from "react-use-websocket";
+import { useSocket } from "../../shared/socket/socket";
 
 export default function Draw() {
   const [colorMode, setColorMode] = useState<"light" | "dark">("light");
 
-  const { sendMessage } = useWebSocket("ws://slage-rpi4-1.local:8765", {
-    onOpen: () => console.log("WebSocket connection opened"),
-  });
+  const { sendImage, socket } = useSocket();
 
   const handleDraw = (data: Blob) => {
-    sendMessage(data);
+    sendImage(data, "PARTIAL_A2");
   };
 
   const handleClear = () => {
-    sendMessage(colorMode);
+    socket.sendMessage(colorMode);
   };
 
   useEffect(() => {

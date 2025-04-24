@@ -1,13 +1,13 @@
 import styles from "./render-text.module.scss";
 import html2canvas from "html2canvas";
 
-const MAX_FONT_SIZE = 420;
-const MIN_FONT_SIZE = 120;
+const MAX_FONT_SIZE = 500;
+const MIN_FONT_SIZE = 200;
 
 export async function renderText(
   textContent: string,
-  colorMode: "light" | "dark" = "dark"
-): Promise<FormData> {
+  colorMode: "light" | "dark" = "light"
+): Promise<Blob> {
   const elem = document.createElement("div");
 
   // Set classes on the element for styling
@@ -24,7 +24,9 @@ export async function renderText(
 
   // Set the text content
   const textNode = document.createTextNode(textContent);
-  elem.appendChild(textNode);
+  const textDiv = document.createElement("div");
+  textDiv.appendChild(textNode);
+  elem.appendChild(textDiv);
 
   // Add to body so we can render it
   document.body.appendChild(elem);
@@ -51,8 +53,5 @@ export async function renderText(
     )
   );
 
-  const fd = new FormData();
-  fd.append("pngFile", blob, "text.png");
-
-  return fd;
+  return blob;
 }
